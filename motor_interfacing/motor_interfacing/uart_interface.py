@@ -9,7 +9,6 @@ TO DO:
 - Determine timing and delays for send/recv portion
 - Change mapping values to reflect real system
 - Ensure that the id's are stored somewhere only once and manipulator, drivetrain, and interfaces  
-
 '''
 
 def make_serial(port):
