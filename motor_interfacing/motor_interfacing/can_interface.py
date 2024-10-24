@@ -15,6 +15,7 @@ class CanInterfaceNode(Node):
         self.can_service = self.create_service(
             CanSendRecv,
             '/can_send_recv',
+            self.send_can_command
         )
 
         self.bus = can.Bus(

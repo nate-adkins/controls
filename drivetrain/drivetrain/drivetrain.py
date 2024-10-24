@@ -5,6 +5,13 @@ from geometry_msgs.msg import Twist
 from controls_interfaces.msg import CanMessage
 import math, can
 
+'''
+TO DO:
+- If not recieved messsage in x seconds, send zero speed
+- If recieved many move msgs, then stopped, make sure to send zero speed
+- Autodetect uart or can failure and switch to different system
+'''
+
 TRACK_WIDTH_M = 1.0
 WHEEL_RADIUS = 1.0
 GEAR_RATIO = 1/35
@@ -14,16 +21,6 @@ FRONT_RIGHT_ID = 0x142
 BACK_LEFT_ID = 0x143
 BACK_RIGHT_ID = 0x141
 
-'''
-TO DO:
-- If not recieved messsage in x seconds, send zero speed
-- If recieved many move msgs, then stopped, make sure to send zero speed
-
-
-- Can node should utilize a server to give back the response information 
-
-'''
-
 class DriveBaseControlNode(Node):
 
     def __init__(self):
@@ -32,7 +29,7 @@ class DriveBaseControlNode(Node):
 
         self.cmd_vel_sub = self.create_subscription(
             msg_type= Twist,
-            topic= self.get_parameter('cmd_vel_topic').get_parameter_value().string_value,
+            topic= "/cmd_vel",
             callback= self.send_drivebase_command,
             qos_profile= qos_profile_sensor_data
             )

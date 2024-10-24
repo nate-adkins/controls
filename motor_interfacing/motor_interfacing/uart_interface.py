@@ -1,64 +1,75 @@
 import rclpy, threading, serial
 from rclpy.node import Node
-from controls_interfaces.srv import CanSendRecv
+from controls_interfaces.srv import UartSendRecv
+import time
 
-def make_uart_port(port):
+'''
+TO DO:
+- Utilize SingleThreadedExecutor or make node for each serial port (most likely)
+- Determine timing and delays for send/recv portion
+- Change mapping values to reflect real system
+- Ensure that the id's are stored somewhere only once and manipulator, drivetrain, and interfaces  
+
+'''
+
+def make_serial(port):
     return serial.Serial(
         port = port,
         baudrate=115200,
         timeout=3,
     )
 
+_PORT_NAME_MAPPINGS = {
+    # Drivebase
+    0x141 : '/dev/ttyUSB0',
+    0x142 : '/dev/ttyUSB1',
+    0x143 : '/dev/ttyUSB2',
+    0x144 : '/dev/ttyUSB3',
+
+    # Manipulator
+    0x145 : '/dev/ttyUSB4',
+    0x146 : '/dev/ttyUSB5',
+    0x147 : '/dev/ttyUSB6',
+    0x148 : '/dev/ttyUSB7',
+    0x149 : '/dev/ttyUSB8',
+
+}
+
+_PORT_MAPPINGS = { key: make_serial(port) for key, port in _PORT_NAME_MAPPINGS.items() }
+
 
 class UartInterfaceNode(Node):
-
-    port_name_mappings = {
-
-        # Drivebase
-        0x141 : '/dev/ttyUSB0',
-        0x142 : '/dev/ttyUSB1',
-        0x143 : '/dev/ttyUSB2',
-        0x144 : '/dev/ttyUSB3',
-
-        # Manipulator
-        0x145 : '/dev/ttyUSB4',
-        0x146 : '/dev/ttyUSB5',
-        0x147 : '/dev/ttyUSB6',
-        0x148 : '/dev/ttyUSB7',
-        0x149 : '/dev/ttyUSB8',
-
-    }
-
-    port_mappings = 
 
     thread_lock = threading.Lock()
 
     def __init__(self):
 
         super().__init__('uart_interface_node')
-
         self.can_service = self.create_service(
-            CanSendRecv,
+            UartSendRecv,
             '/uart_send_recv',
-        )
+            self.send_uart_command
+            )
 
-    def send_can_command(self, request, response):
+    def send_uart_command(self, request, response):
 
-        new_msg = can.Message(
-            arbitration_id=request.arbitration_id,
-            data=request.data,
-            is_extended_id=False,
-            dlc=8,
-        )
+        requested_port = _PORT_MAPPINGS.get(request.arbitration_id)
 
-        # Delays and timings may need to be played with here
+        if requested_port == None:
+            raise ValueError(f"The arbitration id {request.arbitration_id} is not in use")
+    
         with UartInterfaceNode.thread_lock:
-            self.bus.send(new_msg,TIMEOUT_MS)
-            recv_msg = self.bus.recv(TIMEOUT_MS)
 
-        response.arbitration_id = recv_msg.arbitration_id
-        response.data = recv_msg.data
+            # Delays and timings may need to be played with here
+            # in_waiting method ensures data HAS to be there
+            # need to add error handling for if no response
+            requested_port.write(request.uart_data)
+            while requested_port.in_waiting < 13: 
+                time.sleep(0.001)
+            recv = requested_port.readline()
 
+        response.arbitration_id = request.arbitration_id
+        response.uart_data = recv
         return response
         
 def main():
