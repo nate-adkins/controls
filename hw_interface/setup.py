@@ -20,6 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'motor = hw_interface.motor:main',
+            'can = hw_interface.can_interface:main'
         ],
     },
 )

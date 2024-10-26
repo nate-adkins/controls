@@ -18,29 +18,30 @@ class CanInterfaceNode(Node):
             self.send_can_command
         )
 
-        self.bus = can.Bus(
-            interface       = 'socketcan', 
-            channel         = 'can0', 
-            is_extended_id  = False, 
-            bitrate         = 1000000, 
-        )
+        # self.bus = can.Bus(
+        #     interface       = 'socketcan', 
+        #     channel         = 'can0', 
+        #     is_extended_id  = False, 
+        #     bitrate         = 1000000, 
+        # )
 
     def send_can_command(self, request, response):
 
         new_msg = can.Message(
             arbitration_id=request.arbitration_id,
-            data=request.data,
+            data=request.can_data,
             is_extended_id=False,
             dlc=8,
         )
 
         # Delays and timings may need to be played with here
-        with CanInterfaceNode.thread_lock:
-            self.bus.send(new_msg,TIMEOUT_MS)
-            recv_msg = self.bus.recv(TIMEOUT_MS)
-
-        response.arbitration_id = recv_msg.arbitration_id
-        response.data = recv_msg.data
+        # with CanInterfaceNode.thread_lock:
+        #     self.bus.send(new_msg,TIMEOUT_MS)
+        #     recv_msg = self.bus.recv(TIMEOUT_MS)
+        
+        response = CanSendRecv.Response()
+        response.arbitration_id = 69  # recv_msg.arbitration_id
+        response.can_data = [1,1] # recv_msg.data
 
         return response
         
