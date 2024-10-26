@@ -1,6 +1,6 @@
 import rclpy, threading, serial
 from rclpy.node import Node
-from controls_interfaces.srv import UartSendRecv
+from controls_msgs.srv import UartSendRecv
 import time
 
 '''

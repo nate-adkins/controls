@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'motor_interfacing'
+package_name = 'hw_interface'
 
 setup(
     name=package_name,

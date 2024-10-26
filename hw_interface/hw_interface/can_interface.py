@@ -1,6 +1,6 @@
 import rclpy, threading, can
 from rclpy.node import Node
-from controls_interfaces.srv import CanSendRecv
+from controls_msgs.srv import CanSendRecv
 
 TIMEOUT_MS = 0.01
 

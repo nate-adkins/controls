@@ -1,4 +1,4 @@
-from controls_interfaces.srv import CanSendRecv, UartSendRecv
+from controls_msgs.srv import CanSendRecv, UartSendRecv
 import can
 
 

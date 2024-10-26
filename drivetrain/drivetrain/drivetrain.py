@@ -2,7 +2,7 @@ from myactuator import SpeedClosedLoopControlMsg as Speed
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from geometry_msgs.msg import Twist
-from controls_interfaces.srv import CanSendRecv, UartSendRecv
+from controls_msgs.srv import CanSendRecv, UartSendRecv
 import math
 
 '''
