@@ -1,0 +1,2 @@
+float32 speed_limit_dps
+float32 goal_angle_degrees

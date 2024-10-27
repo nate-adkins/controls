@@ -21,7 +21,9 @@ setup(
     entry_points={
         'console_scripts': [
             'motor = hw_interface.motor:main',
-            'can = hw_interface.can_interface:main'
+            'can = hw_interface.can:main',
+            'test = hw_interface.test:main'
+
         ],
     },
 )
