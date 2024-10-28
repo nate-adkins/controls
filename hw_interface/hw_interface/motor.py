@@ -1,14 +1,14 @@
 import rclpy
-from rclpy.node import Node
+from rclpy.node import Node, Parameter
 from controls_msgs.msg import * # CanMessage, SpeedClosedLoopControlMsgSentParams, SpeedClosedLoopControlMsgRecvParams
 from myactuator import * # SpeedClosedLoopControlMsg, ReadMotorStatus1Msg, ReadMotorStatus2Msg
 import can
 
 class MotorNode(Node):
     def __init__(self):
-        super().__init__(node_name='default_motor', namespace='/default_motor')
+        super().__init__(node_name='motor_node')
         
-        self.declare_parameter('arbitration_id', 0x141)
+        self.declare_parameter('arbitration_id', Parameter.Type.INTEGER)
         
         # Publisher/Subscriber Pairs for Can Node    
         self.pub = self.create_publisher(CanMessage,'/can_interface/send',10)
@@ -127,17 +127,17 @@ class MotorNode(Node):
       
     def send_status1(self, msg):
         id = self.get_parameter('arbitration_id').get_parameter_value().integer_value
-        ros_can_msg = self.can_to_ros(ReadMotorStatus1Msg.make_can_msg(id,))
+        ros_can_msg = self.can_to_ros(ReadMotorStatus1Msg.make_can_msg(id))
         self.pub.publish(ros_can_msg) 
     
     def send_status2(self, msg):
         id = self.get_parameter('arbitration_id').get_parameter_value().integer_value
-        ros_can_msg = self.can_to_ros(ReadMotorStatus2Msg.make_can_msg(id,))
+        ros_can_msg = self.can_to_ros(ReadMotorStatus2Msg.make_can_msg(id))
         self.pub.publish(ros_can_msg) 
     
     def send_status3(self, msg):
         id = self.get_parameter('arbitration_id').get_parameter_value().integer_value
-        ros_can_msg = self.can_to_ros(ReadMotorStatus3Msg.make_can_msg(id,))
+        ros_can_msg = self.can_to_ros(ReadMotorStatus3Msg.make_can_msg(id))
         self.pub.publish(ros_can_msg) 
      
 def main():  
