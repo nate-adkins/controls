@@ -1,1 +1,1 @@
-float32 speed_dps
+int32 speed_dps

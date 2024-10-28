@@ -1,2 +1,2 @@
-float32 func_index
-float32 acceleration
+int32 func_index
+int32 acceleration

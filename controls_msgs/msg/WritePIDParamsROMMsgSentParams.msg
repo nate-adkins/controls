@@ -1,6 +1,6 @@
-float32 current_kp
-float32 current_ki
-float32 speed_kp
-float32 speed_ki
-float32 position_kp
-float32 position_ki
+int32 current_kp
+int32 current_ki
+int32 speed_kp
+int32 speed_ki
+int32 position_kp
+int32 position_ki

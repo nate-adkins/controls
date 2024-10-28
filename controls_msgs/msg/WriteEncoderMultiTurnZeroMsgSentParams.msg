@@ -1,1 +1,1 @@
-float32 encoder_zero_offset
+int32 encoder_zero_offset

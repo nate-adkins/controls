@@ -1,17 +1,30 @@
-import rclpy, threading, can
+import rclpy, threading 
 from rclpy.node import Node
-from controls_msgs.srv import CanSendRecv
+import can
+
+from controls_msgs.msg import CanMessage
 
 TIMEOUT_MS = 0.01
 
-class CanInterfaceNode(Node):
+class CanNode(Node):
 
     thread_lock = threading.Lock()
 
     def __init__(self):
+        super().__init__(node_name='can_interface', namespace='/can_interface')
 
-        super().__init__('can_interface_node')
+        self.sub = self.create_subscription(
+            CanMessage,
+            'send',
+            self.send_can_command,
+            10,
+        )
 
+        self.pub = self.create_publisher(
+            CanMessage,
+            'rcvd',
+            10,
+        )
 
         self.bus = can.Bus(
             interface       = 'socketcan', 
@@ -19,31 +32,36 @@ class CanInterfaceNode(Node):
             is_extended_id  = False, 
             bitrate         = 1000000, 
         )
+        
+    def send_can_command(self, ros_can_msg: CanMessage):
 
-    def send_can_command(self, request, response):
-
-        new_msg = can.Message(
-            arbitration_id=request.arbitration_id,
-            data=request.can_data,
+        new_sent_msg = can.Message(
+            arbitration_id=ros_can_msg.arbitration_id,
+            data=ros_can_msg.data,
             is_extended_id=False,
             dlc=8,
         )
-
-        # Delays and timings may need to be played with here
-        with CanInterfaceNode.thread_lock:
-            self.bus.send(new_msg,TIMEOUT_MS)
-            recv_msg = self.bus.recv(TIMEOUT_MS)
         
-        response = CanSendRecv.Response()
-        response.arbitration_id = recv_msg.arbitration_id
-        response.can_data = recv_msg.data
-
-        return response
+        with CanNode.thread_lock:
+            try:
+                self.bus.send(new_sent_msg, TIMEOUT_MS)
+                recv_msg = self.bus.recv(TIMEOUT_MS)
+            except Exception as e:
+                self.get_logger().error(f"Error communicating with the can bus: {e}")
+            
+        if recv_msg is not None:
+            new_recv_msg = CanMessage()
+            new_recv_msg.arbitration_id = recv_msg.arbitration_id
+            new_recv_msg.data = recv_msg.data
+            self.pub.publish(new_recv_msg)
+        else:
+            self.get_logger().error(f"The motor id {ros_can_msg.arbitration_id} was not found")
+        
         
 def main():
     rclpy.init()
-    can_interface_node = CanInterfaceNode()
-    rclpy.spin(can_interface_node)
+    can_node = CanNode()
+    rclpy.spin(can_node)
     rclpy.shutdown()
 
 

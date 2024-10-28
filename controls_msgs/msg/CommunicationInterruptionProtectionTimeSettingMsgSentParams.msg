@@ -1,1 +1,1 @@
-float32 recieve_time_ms
+int32 recieve_time_ms

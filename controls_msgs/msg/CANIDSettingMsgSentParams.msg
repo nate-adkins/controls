@@ -1,2 +1,2 @@
-float32 read_write_flag
-float32 can_id
+int32 read_write_flag
+int32 can_id

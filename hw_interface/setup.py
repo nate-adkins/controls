@@ -22,8 +22,6 @@ setup(
         'console_scripts': [
             'motor = hw_interface.motor:main',
             'can = hw_interface.can:main',
-            'test = hw_interface.test:main'
-
         ],
     },
 )

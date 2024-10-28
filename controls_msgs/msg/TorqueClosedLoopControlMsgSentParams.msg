@@ -1,1 +1,1 @@
-float32 torque_current_amps
+int32 torque_current_amps

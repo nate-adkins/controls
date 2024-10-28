@@ -1,1 +1,1 @@
-float32 baudrate
+int32 baudrate
