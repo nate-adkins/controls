@@ -97,6 +97,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/MotorStopMsgRecvParams.msg"
   "msg/WritePIDParamsRAMMsgRecvParams.msg"
   "msg/MotorModelReadingMsgRecvParams.msg"
+  "msg/ManipulatorControl.msg"
+
   
   "srv/CanSendRecv.srv"
   "srv/UartSendRecv.srv"
