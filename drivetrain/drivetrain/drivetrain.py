@@ -2,6 +2,7 @@ from myactuator import SpeedClosedLoopControlMsg as Speed
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from geometry_msgs.msg import Twist
+from sensor_msgs.msg import Joy
 from controls_msgs.msg import SpeedClosedLoopControlMsgSentParams, ReadMotorStatus1MsgSentParams, ReadMotorStatus2MsgSentParams, ReadMotorStatus3MsgSentParams
 import math, rclpy
 
@@ -33,7 +34,7 @@ class Drivetrain(Node):
 
         self.cmd_vel_sub = self.create_subscription(
             msg_type= Twist,
-            topic= "/cmd_vel",
+            topic= "/joy",
             callback= self.send_drivebase_command,
             qos_profile= qos_profile_sensor_data
             )

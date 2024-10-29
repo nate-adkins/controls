@@ -1,17 +1,10 @@
 from launch import LaunchDescription
 import launch_ros.actions
-import os
-from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
-
-    config_dir = os.path.join(get_package_share_directory('manipulator_control_pkg'),('config'))
-
-    config = os.path.join(config_dir, 'green_controller_manipulator_control.yaml')
     
     ld = LaunchDescription()
 
-    
     ld.add_action(
         launch_ros.actions.Node(
             package='manipulator',
