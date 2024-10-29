@@ -1,9 +1,7 @@
 import os 
-from glob import glob
-from setuptools import find_packages, setup 
-
-
-package_name = 'drivetrain'
+from glob import glob # NEED TO ADD THIS FOR EVERY NEW LAUNCH FILE 
+from setuptools import find_packages, setup # NEED TO ADD THIS FOR EVERY NEW LAUNCH FILE 
+package_name = 'controls'
 
 setup(
     name=package_name,
@@ -25,7 +23,10 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'drivetrain = drivetrain.drivetrain:main',
+            'can = controls.can:main',
+            'drivetrain = controls.drivetrain:main',
+            'manipulator = controls.manipulator:main',
+            'motor = controls.motor:main',
         ],
     },
 )

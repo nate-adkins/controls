@@ -14,7 +14,11 @@ WRIST_SPEED_AXES = 4 # Right Trigger
 WRIST_ROLL_AXES = 6 # Left/Right D Pad
 WRIST_PITCH_AXES = 7 #Up/Down D Pad 
 
-MOTOR_STATUS_HZ = 2
+TIMEOUT_DELAY_SEC = 2
+TIMEOUT_CHECK_HZ = 2
+
+MOTOR_STATUS_HZ = 1
+
 MAX_DPS = 20
 
 def clamp(val) -> int:
@@ -30,6 +34,8 @@ class Manipulator(Node):
 
     def __init__(self):
         super().__init__('manipulator')
+
+
 
         # Speed Publishers         
         self.shoulder_pub = self.create_publisher(SendSpeed,"/manipulator/shoulder/send/speed_control",     10)
@@ -52,9 +58,11 @@ class Manipulator(Node):
         self.pitch_reset_pub = self.create_publisher(Reset,   "/manipulator/wrist_pitch/send/reset",  10)
         self.rail_reset_pub = self.create_publisher(Reset,    "/manipulator/linear_rail/send/reset",  10)
 
-        self.create_subscription(Joy,   "/joy",     self.calculate_motor_speeds)
+        self.create_subscription(Joy,   "/joy",     self.calculate_motor_speeds,    10)
 
-        self.create_timer(1/MOTOR_STATUS_HZ,self.send_status_msgs)
+        self.create_timer(1.0/TIMEOUT_CHECK_HZ, self.check_message_timeout)
+        self.create_timer(1.0/MOTOR_STATUS_HZ,self.send_status_msgs)
+        self.last_received_time = self.get_clock().now()
 
 
     def send_reset_msgs(self):
@@ -88,7 +96,16 @@ class Manipulator(Node):
         self.rail_pub.publish(rail_msg)
 
 
+    def check_message_timeout(self):
+        current_time = self.get_clock().now()
+        if (current_time - self.last_received_time).nanoseconds / 1e9 > TIMEOUT_DELAY_SEC:  
+            self.get_logger().warning(f'No joystick control message received in the last {TIMEOUT_DELAY_SEC} seconds, zeroing motor speeds')
+            self.send_speed_commands(0,0,0,0,0)
+            self.last_received_time = self.get_clock().now()
+
+
     def calculate_motor_speeds(self, joy_msg: Joy):
+        self.last_received_time = self.get_clock().now()
         wrist_speed = normalize_bumper_axes_vals(joy_msg.axes[WRIST_SPEED_AXES])
         shoulder_dps = floor(normalize_joystick_axes_vals(joy_msg.axes[SHOULDER_AXES]) * MAX_DPS * 0.5)
         elbow_dps = floor(normalize_joystick_axes_vals(joy_msg.axes[ELBOW_AXES]) * MAX_DPS * 0.3)

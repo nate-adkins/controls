@@ -7,7 +7,7 @@ def generate_launch_description():
 
     ld.add_action(
         launch_ros.actions.Node(
-            package='manipulator',
+            package='controls',
             executable='manipulator',
         )
     )
@@ -15,7 +15,7 @@ def generate_launch_description():
     ld.add_action(
         launch_ros.actions.Node(
             namespace="manipulator/shoulder", 
-            package='hw_interface',
+            package='controls',
             executable='motor',
             parameters=[{'arbitration_id': 0x146}]  
         )
@@ -24,7 +24,7 @@ def generate_launch_description():
     ld.add_action(
         launch_ros.actions.Node(
             namespace="manipulator/elbow", 
-            package='hw_interface',
+            package='controls',
             executable='motor',
             parameters=[{'arbitration_id': 0x145}]  
         )
@@ -33,7 +33,7 @@ def generate_launch_description():
     ld.add_action(
         launch_ros.actions.Node(
             namespace="manipulator/wrist_roll", 
-            package='hw_interface',
+            package='controls',
             executable='motor',
             parameters=[{'arbitration_id': 0x149}]  
         )
@@ -42,7 +42,7 @@ def generate_launch_description():
     ld.add_action(
         launch_ros.actions.Node(
             namespace="manipulator/wrist_pitch", 
-            package='hw_interface',
+            package='controls',
             executable='motor',
             parameters=[{'arbitration_id': 0x148}]  
         )
@@ -51,7 +51,7 @@ def generate_launch_description():
     ld.add_action(
         launch_ros.actions.Node(
             namespace="manipulator/linear_rail", 
-            package='hw_interface',
+            package='controls',
             executable='motor',
             parameters=[{'arbitration_id': 0x147}]  
         )

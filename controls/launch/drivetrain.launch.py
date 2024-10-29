@@ -7,7 +7,7 @@ def generate_launch_description():
     
     ld.add_action(
         launch_ros.actions.Node(
-            package='drivetrain',
+            package='controls',
             executable='drivetrain',
         )
     )
@@ -15,7 +15,7 @@ def generate_launch_description():
     ld.add_action(
         launch_ros.actions.Node(
             namespace="drivetrain/front_left", 
-            package='hw_interface',
+            package='controls',
             executable='motor',
             parameters=[{'arbitration_id': 0x144}]  
         )
@@ -24,7 +24,7 @@ def generate_launch_description():
     ld.add_action(
         launch_ros.actions.Node(
             namespace="drivetrain/front_right", 
-            package='hw_interface',
+            package='controls',
             executable='motor',
             parameters=[{'arbitration_id': 0x142}]  
         )
@@ -33,7 +33,7 @@ def generate_launch_description():
     ld.add_action(
         launch_ros.actions.Node(
             namespace="drivetrain/back_left", 
-            package='hw_interface',
+            package='controls',
             executable='motor',
             parameters=[{'arbitration_id': 0x143}]  
         )
@@ -42,7 +42,7 @@ def generate_launch_description():
     ld.add_action(
         launch_ros.actions.Node(
             namespace="drivetrain/back_right", 
-            package='hw_interface',
+            package='controls',
             executable='motor',
             parameters=[{'arbitration_id': 0x141}]  
         )
