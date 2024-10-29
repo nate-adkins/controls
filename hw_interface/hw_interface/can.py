@@ -4,7 +4,7 @@ import can
 
 from controls_msgs.msg import CanMessage
 
-TIMEOUT_MS = 0.01
+TIMEOUT_SEC = 0.01
 
 class CanNode(Node):
 
@@ -44,8 +44,8 @@ class CanNode(Node):
         
         with CanNode.thread_lock:
             try:
-                self.bus.send(new_sent_msg, TIMEOUT_MS)
-                recv_msg = self.bus.recv(TIMEOUT_MS)
+                self.bus.send(new_sent_msg, TIMEOUT_SEC)
+                recv_msg = self.bus.recv(TIMEOUT_SEC)
             except Exception as e:
                 self.get_logger().error(f"Error communicating with the can bus: {e}")
             

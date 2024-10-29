@@ -2,7 +2,7 @@ from myactuator import SpeedClosedLoopControlMsg as Speed
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from geometry_msgs.msg import Twist
-from controls_msgs.srv import CanSendRecv, UartSendRecv
+from controls_msgs.msg import SpeedClosedLoopControlMsgSentParams, ReadMotorStatus1MsgSentParams, ReadMotorStatus2MsgSentParams, ReadMotorStatus3MsgSentParams
 import math, rclpy
 
 '''
@@ -17,7 +17,10 @@ TRACK_WIDTH_M = 1.0
 WHEEL_RADIUS = 1.0
 GEAR_RATIO = 1/35
 
-from controls_msgs.msg import SpeedClosedLoopControlMsgSentParams
+TIMEOUT_DELAY_SEC = 1
+MOTOR_STATUS_HZ = 2
+
+
 
 class Drivetrain(Node):
 
@@ -34,6 +37,9 @@ class Drivetrain(Node):
             callback= self.send_drivebase_command,
             qos_profile= qos_profile_sensor_data
             )
+        
+        # Speed Publishers 
+
         
         self.front_left_pub = self.create_publisher(
             SpeedClosedLoopControlMsgSentParams,
@@ -58,6 +64,42 @@ class Drivetrain(Node):
             "/drivetrain/back_right/send/speed_control",
             10
         )
+
+        # Status Publishers 
+
+        self.front_left_status1_pub = self.create_publisher(
+            ReadMotorStatus1MsgSentParams,
+            "/drivetrain/front_left/send/status1",
+            10
+        )
+        
+        self.front_right_status1_pub = self.create_publisher(
+            ReadMotorStatus1MsgSentParams,
+            "/drivetrain/front_right/send/status1",
+            10
+        )
+        
+        self.back_left_status1_pub = self.create_publisher(
+            ReadMotorStatus1MsgSentParams,
+            "/drivetrain/back_left/send/status1",
+            10
+        )
+        
+        self.back_right_status1_pub = self.create_publisher(
+            ReadMotorStatus1MsgSentParams,
+            "/drivetrain/back_right/send/status1",
+            10
+        )
+
+        self.create_timer(1/MOTOR_STATUS_HZ,self.send_status_msgs)
+    
+    def send_status_msgs(self):
+        status_msg = ReadMotorStatus1MsgSentParams()
+        self.front_left_status1_pub.publish(status_msg)
+        self.front_right_status1_pub.publish(status_msg)
+        self.back_left_status1_pub.publish(status_msg)
+        self.back_right_status1_pub.publish(status_msg)
+
         
     def send_drivebase_command(self, twist_msg: Twist):
         self.last_received_time = self.get_clock().now()
@@ -72,10 +114,10 @@ class Drivetrain(Node):
         right_dps = (right_velocity / (2 * math.pi * WHEEL_RADIUS)) * GEAR_RATIO * 360
         
         left_msg = SpeedClosedLoopControlMsgSentParams()
-        left_msg.speed_dps = left_dps
+        left_msg.speed_dps = int(math.floor(left_dps))
         
         right_msg = SpeedClosedLoopControlMsgSentParams()
-        right_msg.speed_dps = right_dps
+        right_msg.speed_dps = int(math.floor(right_dps))
 
         self.front_left_pub.publish(left_msg)
         self.front_right_pub.publish(right_msg)
@@ -84,7 +126,7 @@ class Drivetrain(Node):
         
     def check_message_timeout(self):
         current_time = self.get_clock().now()
-        if (current_time - self.last_received_time).nanoseconds / 1e9 > 10:  
+        if (current_time - self.last_received_time).nanoseconds / 1e9 > TIMEOUT_DELAY_SEC:  
             self.get_logger().warning('No cmd_vel message received in the last 10 seconds, zeroing motors')
             
             zero_msg = SpeedClosedLoopControlMsgSentParams()
