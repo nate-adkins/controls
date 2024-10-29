@@ -26,6 +26,7 @@ setup(
             'can = controls.can:main',
             'drivetrain = controls.drivetrain:main',
             'manipulator = controls.manipulator:main',
+            'ik_manipulator = controls.ik_manipulator:main',
             'motor = controls.motor:main',
         ],
     },
