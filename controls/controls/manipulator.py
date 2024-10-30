@@ -35,8 +35,6 @@ class Manipulator(Node):
     def __init__(self):
         super().__init__('manipulator')
 
-
-
         # Speed Publishers         
         self.shoulder_pub = self.create_publisher(SendSpeed,"/manipulator/shoulder/send/speed_control",     10)
         self.elbow_pub = self.create_publisher(SendSpeed,   "/manipulator/elbow/send/speed_control",        10)
@@ -57,6 +55,13 @@ class Manipulator(Node):
         self.roll_reset_pub = self.create_publisher(Reset,    "/manipulator/wrist_roll/send/reset",   10)
         self.pitch_reset_pub = self.create_publisher(Reset,   "/manipulator/wrist_pitch/send/reset",  10)
         self.rail_reset_pub = self.create_publisher(Reset,    "/manipulator/linear_rail/send/reset",  10)
+
+        # Speed Publishers
+        self.shoulder_pub = self.create_publisher(SendSpeed,"/manipulator/shoulder/send/speed_control",     10)
+        self.elbow_pub = self.create_publisher(SendSpeed,   "/manipulator/elbow/send/speed_control",        10)
+        self.roll_pub = self.create_publisher(SendSpeed,    "/manipulator/wrist_roll/send/speed_control",   10)
+        self.pitch_pub = self.create_publisher(SendSpeed,   "/manipulator/wrist_pitch/send/speed_control",  10)
+        self.rail_pub = self.create_publisher(SendSpeed,    "/manipulator/linear_rail/send/speed_control",  10)
 
         self.create_subscription(Joy,   "/joy",     self.calculate_motor_speeds,    10)
 
@@ -84,13 +89,15 @@ class Manipulator(Node):
 
 
     def send_speed_commands(self, rail, shoulder, elbow, roll, pitch):
+        self.get_logger().info(f"\nrail: {rail}\nshoulder: {shoulder}\nelbow: {elbow}\nroll: {roll}\npitch: {pitch}")
         rail_msg = SendSpeed(); rail_msg.speed_dps = rail
         shoulder_msg = SendSpeed(); shoulder_msg.speed_dps = shoulder
         elbow_msg = SendSpeed(); elbow_msg.speed_dps = elbow
         roll_msg = SendSpeed(); roll_msg.speed_dps = roll
         pitch_msg = SendSpeed(); pitch_msg.speed_dps = pitch
-        self.shoulder_pub.publish(rail_msg)
-        self.elbow_pub.publish(shoulder_msg)
+
+        self.shoulder_pub.publish(shoulder_msg)
+        self.elbow_pub.publish(elbow_msg)
         self.roll_pub.publish(roll_msg)
         self.pitch_pub.publish(pitch_msg)
         self.rail_pub.publish(rail_msg)
@@ -111,7 +118,7 @@ class Manipulator(Node):
         elbow_dps = floor(normalize_joystick_axes_vals(joy_msg.axes[ELBOW_AXES]) * MAX_DPS * 0.3)
         roll_dps = int(joy_msg.axes[WRIST_ROLL_AXES] * wrist_speed * MAX_DPS * 3)
         pitch_dps = int(joy_msg.axes[WRIST_PITCH_AXES] * wrist_speed * MAX_DPS * -1)
-        rail_dps = floor((joy_msg.buttons[RAIL_LEFT_BTN] - joy_msg.buttons[RAIL_RIGHT_BTN]) * 1000)
+        rail_dps = floor((joy_msg.buttons[RAIL_LEFT_BTN] - joy_msg.buttons[RAIL_RIGHT_BTN]) * 200)
         self.send_speed_commands(rail_dps, shoulder_dps, elbow_dps, roll_dps, pitch_dps)
        
     

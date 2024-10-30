@@ -78,6 +78,11 @@ class Manipulator(Node):
         self.create_timer(1.0/MOTOR_STATUS_HZ,self.send_status_msgs)
         self.last_received_time = self.get_clock().now()
 
+        '''
+        
+        
+        '''
+
 
     def send_reset_msgs(self):
         reset_msg = Reset()
@@ -111,7 +116,7 @@ class Manipulator(Node):
 
 
     def update_current_theta_e(self, speed_response_msg: RecvSpeed):
-        self.current_theta_e = self.current_theta_e
+        self.current_theta_e = self.current_theta_e 
 
 
     def update_current_theta_w(self, speed_response_msg: RecvSpeed):
@@ -152,7 +157,7 @@ class Manipulator(Node):
         we = (va*cosd(ThetaS) + vb*sind(ThetaS) - WRIST_LENGTH_MM*w3*cosd(ThetaE + ThetaW - 360)*sind(ThetaS) + WRIST_LENGTH_MM*w3*sind(ThetaE + ThetaW - 360)*cosd(ThetaS))/(ELBOW_LENGTH_MM*(cosd(ThetaE - 180)*sind(ThetaS) - sind(ThetaE - 180)*cosd(ThetaS)))
         ww = w3 - we
 
-
+        # if not any(max([we,ws,ww]) < MAX_DPS,ThetaS - ThetaE < SE_Min,ThetaW < EW_Min, ThetaW > 360 - EW_Min ):
         shoulder_dps = ws
         elbow_dps = we
         roll_dps = int(joy_msg.axes[WRIST_ROLL_AXES] * wrist_speed * MAX_DPS * 3)

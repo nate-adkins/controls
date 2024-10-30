@@ -73,7 +73,7 @@ class Drivetrain(Node):
         if (current_time - self.last_received_time).nanoseconds / 1e9 > TIMEOUT_DELAY_SEC:  
             self.get_logger().warning(f'No cmd_vel message received in the last {TIMEOUT_DELAY_SEC} seconds, zeroing motor speeds')
             self.send_speed_commands(0,0)
-            self.last_received_time = self.get_clock().now()
+            self.last_received_time = self.get_clock().now() # repeated zeros has TIMEOUT_DELAY_SEC delay between them
 
         
     def send_drivebase_command(self, twist_msg: Twist):
