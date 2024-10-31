@@ -4,6 +4,13 @@ import launch_ros.actions
 def generate_launch_description():
     
     ld = LaunchDescription()
+
+    ld.add_action(
+        launch_ros.actions.Node(
+            package='controls',
+            executable='graphical_debugger',
+        )
+    )
     
     ld.add_action(
         launch_ros.actions.Node(
