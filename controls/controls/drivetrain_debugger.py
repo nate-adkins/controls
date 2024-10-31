@@ -4,11 +4,11 @@ from controls_msgs.msg import *
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-VIEWABLE_DATA_POINTS = 300
+VIEWABLE_DATA_POINTS = 600
 
 class DebugGraphing(Node):
     def __init__(self):
-        super().__init__('debug_graphing')
+        super().__init__('drivetrain_debugging')
 
         # Speed Topics
         self.create_subscription(
@@ -131,7 +131,6 @@ class DebugGraphing(Node):
         self.ax2.plot(self.br_voltage, label='Back Right')
         self.ax2.plot(self.bl_voltage, label='Back Left')
         self.ax2.set_title('Voltage (Volts)')
-        self.ax2.set_xlabel('Time')
         self.ax2.set_ylabel('Voltage (V)')
         self.ax2.legend()
 

@@ -8,7 +8,7 @@ def generate_launch_description():
     ld.add_action(
         launch_ros.actions.Node(
             package='controls',
-            executable='graphical_debugger',
+            executable='drivetrain_debugger',
         )
     )
     

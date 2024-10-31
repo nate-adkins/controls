@@ -24,11 +24,14 @@ setup(
     entry_points={
         'console_scripts': [
             'can = controls.can:main',
+            'motor = controls.motor:main',
+
             'drivetrain = controls.drivetrain:main',
             'manipulator = controls.manipulator:main',
             'ik_manipulator = controls.ik_manipulator:main',
-            'motor = controls.motor:main',
-            'graphical_debugger = controls.graphical_debugger:main'
+            
+            'drivetrain_debugger = controls.drivetrain_debugger:main',
+            'manipulator_debugger = controls.manipulator_debugger:main',
         ],
     },
 )

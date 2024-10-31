@@ -8,6 +8,13 @@ def generate_launch_description():
     ld.add_action(
         launch_ros.actions.Node(
             package='controls',
+            executable='manipulator_debugger',
+        )
+    )
+
+    ld.add_action(
+        launch_ros.actions.Node(
+            package='controls',
             executable='manipulator',
         )
     )
