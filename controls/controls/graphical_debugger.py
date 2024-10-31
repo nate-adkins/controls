@@ -135,7 +135,7 @@ class DebugGraphing(Node):
         self.ax2.set_ylabel('Voltage (V)')
         self.ax2.legend()
 
-        # Adjust layout
+        self.fig.suptitle('Drivetrain Data')
         plt.tight_layout()
 
     def show_plot(self):
