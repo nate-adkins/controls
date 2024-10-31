@@ -4,6 +4,8 @@ from controls_msgs.msg import *
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
+VIEWABLE_DATA_POINTS = 300
+
 class DebugGraphing(Node):
     def __init__(self):
         super().__init__('debug_graphing')
@@ -76,23 +78,38 @@ class DebugGraphing(Node):
 
     # Speed
     def update_fr_recv_speed(self, msg: SpeedClosedLoopControlMsgRecvParams):
-        self.fr_current.append(msg.current_amps)
+        self.fr_current.append(abs(msg.current_amps))
+        self.fr_current = self.fr_current[-1*VIEWABLE_DATA_POINTS:]
+        
     def update_fl_recv_speed(self, msg: SpeedClosedLoopControlMsgRecvParams):
-        self.fl_current.append(msg.current_amps)
+        self.fl_current.append(abs(msg.current_amps))
+        self.fl_current = self.fl_current[-1*VIEWABLE_DATA_POINTS:]
+
     def update_br_recv_speed(self, msg: SpeedClosedLoopControlMsgRecvParams):
-        self.br_current.append(msg.current_amps)
+        self.br_current.append(abs(msg.current_amps))
+        self.br_current = self.br_current[-1*VIEWABLE_DATA_POINTS:]
+
     def update_bl_recv_speed(self, msg: SpeedClosedLoopControlMsgRecvParams):
-        self.bl_current.append(msg.current_amps)
+        self.bl_current.append(abs(msg.current_amps))
+        self.bl_current = self.bl_current[-1*VIEWABLE_DATA_POINTS:]
 
     # Status
     def update_fr_recv_status(self, msg: ReadMotorStatus1MsgRecvParams):
         self.fr_voltage.append(msg.voltage_volts)
+        self.fr_voltage = self.fr_voltage[-1*VIEWABLE_DATA_POINTS:]
+
     def update_fl_recv_status(self, msg: ReadMotorStatus1MsgRecvParams):
         self.fl_voltage.append(msg.voltage_volts)
+        self.fl_voltage = self.fl_voltage[-1*VIEWABLE_DATA_POINTS:]
+
     def update_br_recv_status(self, msg: ReadMotorStatus1MsgRecvParams):
         self.br_voltage.append(msg.voltage_volts)
+        self.br_voltage = self.br_voltage[-1*VIEWABLE_DATA_POINTS:]
+
     def update_bl_recv_status(self, msg: ReadMotorStatus1MsgRecvParams):
         self.bl_voltage.append(msg.voltage_volts)
+        self.bl_voltage = self.bl_voltage[-1*VIEWABLE_DATA_POINTS:]
+
 
     # Plot updating function
     def update_plot(self, frame):
@@ -129,13 +146,12 @@ def main():
     rclpy.init()
     node = DebugGraphing()
 
-    # Run ROS node in a separate thread to allow real-time updates
     from threading import Thread
     spin_thread = Thread(target=rclpy.spin, args=(node,))
     spin_thread.start()
 
     try:
-        node.show_plot()  # Start live plot
+        node.show_plot()
     except KeyboardInterrupt:
         pass
     finally:
