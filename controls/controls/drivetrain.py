@@ -23,6 +23,8 @@ TIMEOUT_CHECK_HZ = 2
 
 MOTOR_STATUS_HZ = 1
 
+SPEED_COEFF = 100
+
 
 
 class Drivetrain(Node):
@@ -33,7 +35,7 @@ class Drivetrain(Node):
         
 
 
-        self.cmd_vel_sub = self.create_subscription(Twist,"/joy",self.send_drivebase_command,qos_profile_sensor_data)
+        self.cmd_vel_sub = self.create_subscription(Twist,"/cmd_vel",self.send_drivebase_command,qos_profile_sensor_data)
         
         # Speed Publishers
         self.front_left_pub = self.create_publisher(SendSpeed,  "/drivetrain/front_left/send/speed_control",    10)
@@ -85,8 +87,8 @@ class Drivetrain(Node):
         left_velocity = lin_vel - ang_vel * (TRACK_WIDTH_M / 2)
         right_velocity = lin_vel + ang_vel * (TRACK_WIDTH_M / 2)
         
-        left_dps = int(math.floor((left_velocity / (2 * math.pi * WHEEL_RADIUS)) * GEAR_RATIO * 360))
-        right_dps = int(math.floor((right_velocity / (2 * math.pi * WHEEL_RADIUS)) * GEAR_RATIO * 360))
+        left_dps = int(math.floor(SPEED_COEFF * (left_velocity / (2 * math.pi * WHEEL_RADIUS)) * GEAR_RATIO * 360))
+        right_dps = int(math.floor(SPEED_COEFF * (right_velocity / (2 * math.pi * WHEEL_RADIUS)) * GEAR_RATIO * 360))
         self.send_speed_commands(left_dps,right_dps)
     
 

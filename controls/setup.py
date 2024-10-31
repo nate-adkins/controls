@@ -28,6 +28,7 @@ setup(
             'manipulator = controls.manipulator:main',
             'ik_manipulator = controls.ik_manipulator:main',
             'motor = controls.motor:main',
+            'graphical_debugger = controls.graphical_debugger:main'
         ],
     },
 )
