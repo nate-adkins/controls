@@ -113,6 +113,11 @@ class Manipulator(Node):
 
     def calculate_motor_speeds(self, joy_msg: Joy):
         self.last_received_time = self.get_clock().now()
+
+        if joy_msg[RESTART_BTN]:
+            self.send_reset_msgs()
+            return
+
         wrist_speed = normalize_bumper_axes_vals(joy_msg.axes[WRIST_SPEED_AXES])
         shoulder_dps = floor(normalize_joystick_axes_vals(joy_msg.axes[SHOULDER_AXES]) * MAX_DPS * 0.5)
         elbow_dps = floor(normalize_joystick_axes_vals(joy_msg.axes[ELBOW_AXES]) * MAX_DPS * 0.3)

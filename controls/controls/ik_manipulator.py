@@ -1,9 +1,10 @@
 
 import rclpy
-from controls_msgs.msg import SpeedClosedLoopControlMsgSentParams as SendSpeed, ReadMotorStatus1MsgSentParams as SendStatus1, SystemResetMsgSentParams as Reset, SpeedClosedLoopControlMsgRecvParams as RecvSpeed
+from controls_msgs.msg import SpeedClosedLoopControlMsgSentParams as SendSpeed, ReadMotorStatus1MsgSentParams as SendStatus1, SystemResetMsgSentParams as Reset, SpeedClosedLoopControlMsgRecvParams as RecvSpeed, WriteEncoderMultiTurnZeroMsgSentParams as WriteAngle
 from rclpy.node import Node
 from sensor_msgs.msg import Joy
 from math import floor, pi, cos, sin
+from rclpy.publisher import Publisher
 
 RESTART_BTN = 4 # Top Face Button
 RAIL_LEFT_BTN = 6 # Left Bumper
@@ -29,8 +30,6 @@ MAX_LINEAR_VEL_MPS = 0.05
 SE_MIN = 20
 EW_MIN = 20
 
-
-
 def clamp(val) -> int:
     return max(-1,min(val,1))
 
@@ -44,12 +43,8 @@ class Manipulator(Node):
 
     def __init__(self):
         super().__init__('manipulator')
-
-
-        #TODO Make an initialization sequence
-        self.current_theta_w = 100
-        self.current_theta_s = 100
-        self.current_theta_e = 100
+    
+    # PUBLISHERS
 
         # Speed Publishers         
         self.shoulder_pub = self.create_publisher(SendSpeed,"/manipulator/shoulder/send/speed_control",     10)
@@ -72,16 +67,47 @@ class Manipulator(Node):
         self.pitch_reset_pub = self.create_publisher(Reset,   "/manipulator/wrist_pitch/send/reset",  10)
         self.rail_reset_pub = self.create_publisher(Reset,    "/manipulator/linear_rail/send/reset",  10)
 
+        # Zeroing Publishers
+        self.shoulder_zero_pub = self.create_publisher(WriteAngle,"/manipulator/shoulder/send/reset",     10)
+        self.elbow_zero_pub = self.create_publisher(WriteAngle,   "/manipulator/elbow/send/reset",        10)
+        self.roll_zero_pub = self.create_publisher(WriteAngle,    "/manipulator/wrist_roll/send/reset",   10)
+        self.pitch_zero_pub = self.create_publisher(WriteAngle,   "/manipulator/wrist_pitch/send/reset",  10)
+        self.rail_zero_pub = self.create_publisher(WriteAngle,    "/manipulator/linear_rail/send/reset",  10)
+
+        # Motor Angles Publishers
+        self.pitch_angle_pub: Publisher = self.create_publisher(WriteAngle,     "/manipulator/wrist_pitch/send/write_zero_to_encoder",  10)
+        self.shoulder_angle_pub: Publisher = self.create_publisher(WriteAngle,  "/manipulator/shoulder/send/write_zero_to_encoder",     10)
+        self.elbow_angle_pub: Publisher = self.create_publisher(WriteAngle,     "/manipulator/elbow/send/write_zero_to_encoder",        10)
+
+    # SUBSCRIBERS 
+
+        # Angle Subscribers         
+        self.create_subscription(RecvSpeed, "/manipulator/shoulder/rcvd/speed_control",     self.update_current_theta_s,    10)
+        self.create_subscription(RecvSpeed, "/manipulator/elbow/rcvd/speed_control",        self.update_current_theta_e,    10)
+        self.create_subscription(RecvSpeed, "/manipulator/wrist_pitch/rcvd/speed_control",  self.update_current_theta_w,    10)
+
         self.create_subscription(Joy,   "/joy",     self.calculate_motor_speeds,    10)
+    
+    # TIMERS 
 
         self.create_timer(1.0/TIMEOUT_CHECK_HZ, self.check_message_timeout)
         self.create_timer(1.0/MOTOR_STATUS_HZ,self.send_status_msgs)
         self.last_received_time = self.get_clock().now()
 
-        '''
+    # INITIALIZING MOTOR ANGLES
+
+        def make_write_angle_msg(angle):
+            msg = WriteAngle()
+            msg.encoder_zero_offset = angle
+            return msg
         
-        
-        '''
+        initial_pitch_angle = 180
+        initial_shoulder_angle = 90
+        initial_elbow_angle = 180     
+
+        self.pitch_angle_pub.publish(make_write_angle_msg(initial_pitch_angle))
+        self.shoulder_angle_pub.publish(make_write_angle_msg(initial_shoulder_angle))
+        self.elbow_angle_pub.publish(make_write_angle_msg(initial_elbow_angle))
 
 
     def send_reset_msgs(self):
@@ -115,16 +141,16 @@ class Manipulator(Node):
         self.rail_pub.publish(rail_msg)
 
 
-    def update_current_theta_e(self, speed_response_msg: RecvSpeed):
-        self.current_theta_e = self.current_theta_e 
+    def update_current_theta_e(self, msg: RecvSpeed):
+        self.current_theta_e = msg.angle_degrees
 
 
-    def update_current_theta_w(self, speed_response_msg: RecvSpeed):
-        self.current_theta_w = self.current_theta_w
+    def update_current_theta_w(self, msg: RecvSpeed):
+        self.current_theta_w = msg.angle_degrees
 
 
-    def update_current_theta_s(self, speed_response_msg: RecvSpeed):
-        self.current_theta_w = self.current_theta_w
+    def update_current_theta_s(self, msg: RecvSpeed):
+        self.current_theta_s = msg.angle_degrees
 
 
     def check_message_timeout(self):
@@ -137,6 +163,9 @@ class Manipulator(Node):
 
     def calculate_motor_speeds(self, joy_msg: Joy):
         self.last_received_time = self.get_clock().now()
+
+        if joy_msg[RESTART_BTN]:
+            self.send_reset_msgs()
 
         def cosd(angle):
             return cos(180*angle/pi)
@@ -157,13 +186,14 @@ class Manipulator(Node):
         we = (va*cosd(ThetaS) + vb*sind(ThetaS) - WRIST_LENGTH_MM*w3*cosd(ThetaE + ThetaW - 360)*sind(ThetaS) + WRIST_LENGTH_MM*w3*sind(ThetaE + ThetaW - 360)*cosd(ThetaS))/(ELBOW_LENGTH_MM*(cosd(ThetaE - 180)*sind(ThetaS) - sind(ThetaE - 180)*cosd(ThetaS)))
         ww = w3 - we
 
-        # if not any(max([we,ws,ww]) < MAX_DPS,ThetaS - ThetaE < SE_Min,ThetaW < EW_Min, ThetaW > 360 - EW_Min ):
         shoulder_dps = ws
         elbow_dps = we
         roll_dps = int(joy_msg.axes[WRIST_ROLL_AXES] * wrist_speed * MAX_DPS * 3)
         pitch_dps = ww
         rail_dps = floor((joy_msg.buttons[RAIL_LEFT_BTN] - joy_msg.buttons[RAIL_RIGHT_BTN]) * 1000)
         
+        # if not any(max([we,ws,ww]) < MAX_DPS,ThetaS - ThetaE < SE_MIN,ThetaW < EW_MIN, ThetaW > 360 - EW_MIN ):
+
         self.send_speed_commands(rail_dps, shoulder_dps, elbow_dps, roll_dps, pitch_dps)
        
     
