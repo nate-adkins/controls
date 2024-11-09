@@ -3,11 +3,12 @@ import launch_ros.actions
 
 def generate_launch_description():
 
-    FRONT_LEFT_ID = 0x144
-    FRONT_RIGHT_ID = 0x142
+    FRONT_LEFT_ID = 0x141
+    FRONT_RIGHT_ID = 0x143
 
-    BACK_LEFT_ID = 0x143
-    BACK_RIGHT_ID = 0x141
+    BACK_LEFT_ID = 0x142
+    BACK_RIGHT_ID = 0x144
+
     
     ld = LaunchDescription()
 

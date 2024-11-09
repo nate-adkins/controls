@@ -21,6 +21,8 @@ MOTOR_STATUS_HZ = 1
 
 MAX_DPS = 20
 
+DEBUGGING = False
+
 def clamp(val) -> int:
     return max(-1,min(val,1))
 
@@ -124,6 +126,10 @@ class Manipulator(Node):
         roll_dps = int(joy_msg.axes[WRIST_ROLL_AXES] * wrist_speed * MAX_DPS * 3)
         pitch_dps = int(joy_msg.axes[WRIST_PITCH_AXES] * wrist_speed * MAX_DPS * -1)
         rail_dps = floor((joy_msg.buttons[RAIL_LEFT_BTN] - joy_msg.buttons[RAIL_RIGHT_BTN]) * 200)
+
+        if DEBUGGING:
+            self.get_logger().info(f"rail_dps{rail_dps}\nshoulder_dps{shoulder_dps}\nelbow_dps{elbow_dps}\nroll_dps{roll_dps}\npitch_dps{pitch_dps}")
+
         self.send_speed_commands(rail_dps, shoulder_dps, elbow_dps, roll_dps, pitch_dps)
        
     
@@ -137,3 +143,8 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
+
+
+
+
