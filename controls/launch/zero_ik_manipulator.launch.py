@@ -5,17 +5,31 @@ def generate_launch_description():
     
     ld = LaunchDescription()
 
-    # ld.add_action(
-    #     launch_ros.actions.Node(
-    #         package='controls',
-    #         executable='manipulator_debugger',
-    #     )
-    # )
+    ld.add_action(
+        launch_ros.actions.Node(
+            package='joy',
+            executable='joy_node',
+        )
+    )   
 
     ld.add_action(
         launch_ros.actions.Node(
             package='controls',
-            executable='ik_manipulator',
+            executable='manipulator_debugger',
+        )
+    )
+
+    ld.add_action(
+        launch_ros.actions.Node(
+            package='controls',
+            executable='zero_ik_manipulator',
+        )
+    )
+
+    ld.add_action(
+        launch_ros.actions.Node(
+            package='controls',
+            executable='can',
         )
     )
     

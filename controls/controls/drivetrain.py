@@ -1,8 +1,6 @@
-from myactuator import SpeedClosedLoopControlMsg as Speed
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from geometry_msgs.msg import Twist
-from sensor_msgs.msg import Joy
 from controls_msgs.msg import SpeedClosedLoopControlMsgSentParams as SendSpeed, ReadMotorStatus1MsgSentParams as SendStatus1
 import math, rclpy
 
@@ -25,6 +23,8 @@ MOTOR_STATUS_HZ = 1
 
 SPEED_COEFF = 100
 
+DEBUGGING = False
+
 
 
 class Drivetrain(Node):
@@ -33,8 +33,6 @@ class Drivetrain(Node):
 
         super().__init__('drivetrain')
         
-
-
         self.cmd_vel_sub = self.create_subscription(Twist,"/cmd_vel",self.send_drivebase_command,qos_profile_sensor_data)
         
         # Speed Publishers
@@ -79,18 +77,27 @@ class Drivetrain(Node):
 
         
     def send_drivebase_command(self, twist_msg: Twist):
-        self.last_received_time = self.get_clock().now()
+        try:
+            self.last_received_time = self.get_clock().now()
 
-        lin_vel = twist_msg.linear.x
-        ang_vel = twist_msg.angular.z
+            lin_vel = twist_msg.linear.x
+            ang_vel = twist_msg.angular.z
 
-        left_velocity = lin_vel - ang_vel * (TRACK_WIDTH_M / 2)
-        right_velocity = lin_vel + ang_vel * (TRACK_WIDTH_M / 2)
-        
-        left_dps = int(math.floor(SPEED_COEFF * (left_velocity / (2 * math.pi * WHEEL_RADIUS)) * GEAR_RATIO * 360))
-        right_dps = int(math.floor(SPEED_COEFF * (right_velocity / (2 * math.pi * WHEEL_RADIUS)) * GEAR_RATIO * 360))
-        self.send_speed_commands(left_dps,right_dps)
-    
+            left_velocity = lin_vel - ang_vel * (TRACK_WIDTH_M / 2)
+            right_velocity = lin_vel + ang_vel * (TRACK_WIDTH_M / 2)
+            
+            left_dps = int(math.floor(SPEED_COEFF * (left_velocity / (2 * math.pi * WHEEL_RADIUS)) * GEAR_RATIO * 360))
+            right_dps = int(math.floor(SPEED_COEFF * (right_velocity / (2 * math.pi * WHEEL_RADIUS)) * GEAR_RATIO * 360))
+
+            if DEBUGGING:
+                self.get_logger().info(f"left_dps{left_dps}\nright_dps{right_dps}")
+
+            self.send_speed_commands(left_dps,right_dps)
+
+        except Exception as e:
+            self.get_logger().warning(f"Error in handling of drivetrain control {e.with_traceback()}, sending zero speeds")
+            self.send_speed_commands(0,0)
+
 
             
 def main(args=None):

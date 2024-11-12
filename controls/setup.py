@@ -29,6 +29,8 @@ setup(
             'drivetrain = controls.drivetrain:main',
             'manipulator = controls.manipulator:main',
             'ik_manipulator = controls.ik_manipulator:main',
+            'zero_ik_manipulator = controls.zero_ik_manipulator:main',
+
             
             'drivetrain_debugger = controls.drivetrain_debugger:main',
             'manipulator_debugger = controls.manipulator_debugger:main',

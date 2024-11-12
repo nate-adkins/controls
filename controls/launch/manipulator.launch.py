@@ -7,6 +7,13 @@ def generate_launch_description():
 
     ld.add_action(
         launch_ros.actions.Node(
+            package='joy',
+            executable='joy_node',
+        )
+    )   
+
+    ld.add_action(
+        launch_ros.actions.Node(
             package='controls',
             executable='manipulator_debugger',
         )
@@ -16,6 +23,13 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='controls',
             executable='manipulator',
+        )
+    )
+
+    ld.add_action(
+        launch_ros.actions.Node(
+            package='controls',
+            executable='can',
         )
     )
     

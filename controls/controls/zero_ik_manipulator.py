@@ -1,6 +1,6 @@
 
 import rclpy
-from controls_msgs.msg import SpeedClosedLoopControlMsgSentParams as SendSpeed, ReadMotorStatus1MsgSentParams as SendStatus1, SystemResetMsgSentParams as Reset, SpeedClosedLoopControlMsgRecvParams as RecvSpeed, WriteEncoderMultiTurnZeroMsgSentParams as WriteAngle
+from controls_msgs.msg import SpeedClosedLoopControlMsgSentParams as SendSpeed, ReadMotorStatus1MsgSentParams as SendStatus1, SystemResetMsgSentParams as Reset, SpeedClosedLoopControlMsgRecvParams as RecvSpeed, WriteCurrentMultiTurnZeroMsgSentParams as WriteZero
 from rclpy.node import Node
 from sensor_msgs.msg import Joy
 from math import floor, pi, cos, sin
@@ -15,8 +15,8 @@ WRIST_SPEED_AXES = 4 # Right Trigger
 WRIST_ROLL_AXES = 6 # Left/Right D Pad
 WRIST_PITCH_AXES = 7 #Up/Down D Pad 
 
-TIMEOUT_DELAY_SEC = 2
-TIMEOUT_CHECK_HZ = 2
+TIMEOUT_DELAY_SEC = 0.5
+TIMEOUT_CHECK_HZ = 8
 
 MOTOR_STATUS_HZ = 1
 
@@ -70,9 +70,9 @@ class Manipulator(Node):
         self.rail_reset_pub = self.create_publisher(Reset,    "/manipulator/linear_rail/send/reset",  10)
 
         # Motor Angles Publishers
-        self.pitch_angle_pub: Publisher = self.create_publisher(WriteAngle,     "/manipulator/wrist_pitch/send/write_zero_to_encoder",  10)
-        self.shoulder_angle_pub: Publisher = self.create_publisher(WriteAngle,  "/manipulator/shoulder/send/write_zero_to_encoder",     10)
-        self.elbow_angle_pub: Publisher = self.create_publisher(WriteAngle,     "/manipulator/elbow/send/write_zero_to_encoder",        10)
+        self.pitch_angle_pub: Publisher = self.create_publisher(WriteZero,     "/manipulator/wrist_pitch/send/write_current_encoder_as_zero",  10)
+        self.shoulder_angle_pub: Publisher = self.create_publisher(WriteZero,  "/manipulator/shoulder/send/write_current_encoder_as_zero",     10)
+        self.elbow_angle_pub: Publisher = self.create_publisher(WriteZero,     "/manipulator/elbow/send/write_current_encoder_as_zero",        10)
 
     # SUBSCRIBERS 
 
@@ -91,24 +91,31 @@ class Manipulator(Node):
 
     # INITIALIZING MOTOR ANGLES
 
-        def make_write_angle_msg(angle) -> WriteAngle:
-            msg = WriteAngle()
-            msg.encoder_zero_offset = angle
+        def make_write_angle_msg() -> WriteZero:
+            msg = WriteZero()
             return msg
-        
-        initial_pitch_angle = 180
-        initial_shoulder_angle = 90
-        initial_elbow_angle = 180
 
-        self.pitch_angle_pub.publish(make_write_angle_msg(initial_pitch_angle))
-        self.shoulder_angle_pub.publish(make_write_angle_msg(initial_shoulder_angle))
-        self.elbow_angle_pub.publish(make_write_angle_msg(initial_elbow_angle))
+        self.pitch_angle_pub.publish(make_write_angle_msg())
+        self.shoulder_angle_pub.publish(make_write_angle_msg())
+        self.elbow_angle_pub.publish(make_write_angle_msg())
 
-        self.current_theta_e = initial_shoulder_angle
-        self.current_theta_s = initial_shoulder_angle
-        self.current_theta_w = initial_pitch_angle
+        self.initial_shoulder: int
+        self.initial_elbow: int
+        self.initial_wrist: int
 
-        # self.send_reset_msgs()
+        self.have_initial_shoulder: bool = False
+        self.have_initial_elbow: bool = False
+        self.have_initial_wrist: bool = False
+
+        self.initial_wanted_theta_e = 0
+        self.initial_wanted_theta_s = 90
+        self.initial_wanted_theta_w = 180
+
+        self.current_theta_e = self.initial_wanted_theta_e
+        self.current_theta_s = self.initial_wanted_theta_s
+        self.current_theta_w = self.initial_wanted_theta_w
+
+        self.send_reset_msgs()
         self.send_speed_commands(0,0,0,0,0)
 
 
@@ -144,20 +151,36 @@ class Manipulator(Node):
 
 
     def update_current_theta_e(self, msg: RecvSpeed):
-        self.get_logger().info(f"Elbow theta: {msg.angle_degrees}")
-        self.current_theta_e = msg.angle_degrees
+
+        if not self.have_initial_elbow:
+            self.initial_elbow = msg.angle_degrees
+            self.have_initial_elbow = True
+
+        self.get_logger().info(f"Encoder elbow theta: {msg.angle_degrees}")
+        self.current_theta_e = msg.angle_degrees + self.initial_wanted_theta_e - self.initial_elbow
+        self.get_logger().info(f"Model elbow theta: {self.current_theta_e}")
 
 
     def update_current_theta_w(self, msg: RecvSpeed):
-        self.get_logger().info(f"Wrist theta: {msg.angle_degrees}")
-        self.current_theta_w = msg.angle_degrees
+
+        if not self.have_initial_wrist:
+            self.initial_wrist = msg.angle_degrees
+            self.have_initial_wrist = True
+
+        self.get_logger().info(f"Encoder wrist theta: {msg.angle_degrees}")
+        self.current_theta_w = msg.angle_degrees + self.initial_wanted_theta_w - self.initial_wrist
+        self.get_logger().info(f"Model wrist theta: {self.current_theta_w}")
 
 
     def update_current_theta_s(self, msg: RecvSpeed):
-        self.get_logger().info(f"Shoulder theta: {msg.angle_degrees}")
-        self.get_logger().info(f"Calculated Shoulder theta: {180.0 - msg.angle_degrees}")
 
-        self.current_theta_s = 180.0 - msg.angle_degrees
+        if not self.have_initial_shoulder:
+            self.initial_shoulder = msg.angle_degrees
+            self.have_initial_shoulder = True
+
+        self.get_logger().info(f"Encoder shoulder theta: {msg.angle_degrees}")
+        self.current_theta_s = msg.angle_degrees + self.initial_wanted_theta_s - self.initial_shoulder
+        self.get_logger().info(f"Model shoulder theta: {self.current_theta_s}")
 
 
     def check_message_timeout(self):

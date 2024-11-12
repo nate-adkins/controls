@@ -1,6 +1,6 @@
 
 import rclpy
-from controls_msgs.msg import SpeedClosedLoopControlMsgSentParams as SendSpeed, ReadMotorStatus1MsgSentParams as SendStatus1, SystemResetMsgSentParams as Reset
+from controls_msgs.msg import SpeedClosedLoopControlMsgSentParams as SendSpeed, ReadMotorStatus1MsgSentParams as SendStatus1, SystemResetMsgSentParams as Reset, WriteCurrentMultiTurnZeroMsgSentParams as WriteZero
 from rclpy.node import Node
 from sensor_msgs.msg import Joy
 from math import floor
@@ -20,6 +20,8 @@ TIMEOUT_CHECK_HZ = 2
 MOTOR_STATUS_HZ = 1
 
 MAX_DPS = 20
+
+DEBUGGING = False
 
 def clamp(val) -> int:
     return max(-1,min(val,1))
@@ -69,6 +71,19 @@ class Manipulator(Node):
         self.create_timer(1.0/MOTOR_STATUS_HZ,self.send_status_msgs)
         self.last_received_time = self.get_clock().now()
 
+        self.pitch_angle_pub = self.create_publisher(WriteZero,     "/manipulator/wrist_pitch/send/write_current_encoder_as_zero",  10)
+        self.shoulder_angle_pub = self.create_publisher(WriteZero,  "/manipulator/shoulder/send/write_current_encoder_as_zero",     10)
+        self.elbow_angle_pub = self.create_publisher(WriteZero,     "/manipulator/elbow/send/write_current_encoder_as_zero",        10)
+
+        self.pitch_angle_pub.publish(WriteZero())
+        self.shoulder_angle_pub.publish(WriteZero())
+        self.elbow_angle_pub.publish(WriteZero())
+        self.get_logger().info("Zeroing encoders")
+        self.send_reset_msgs()
+        self.get_logger().info("Resetting motors")
+
+        self.send_speed_commands(0,0,0,0,0)
+
 
     def send_reset_msgs(self):
         reset_msg = Reset()
@@ -114,7 +129,7 @@ class Manipulator(Node):
     def calculate_motor_speeds(self, joy_msg: Joy):
         self.last_received_time = self.get_clock().now()
 
-        if joy_msg[RESTART_BTN]:
+        if joy_msg.buttons[RESTART_BTN]:
             self.send_reset_msgs()
             return
 
@@ -123,7 +138,11 @@ class Manipulator(Node):
         elbow_dps = floor(normalize_joystick_axes_vals(joy_msg.axes[ELBOW_AXES]) * MAX_DPS * 0.3)
         roll_dps = int(joy_msg.axes[WRIST_ROLL_AXES] * wrist_speed * MAX_DPS * 3)
         pitch_dps = int(joy_msg.axes[WRIST_PITCH_AXES] * wrist_speed * MAX_DPS * -1)
-        rail_dps = floor((joy_msg.buttons[RAIL_LEFT_BTN] - joy_msg.buttons[RAIL_RIGHT_BTN]) * 200)
+        rail_dps = floor((joy_msg.buttons[RAIL_LEFT_BTN] - joy_msg.buttons[RAIL_RIGHT_BTN]) * 500)
+
+        if DEBUGGING:
+            self.get_logger().info(f"rail_dps{rail_dps}\nshoulder_dps{shoulder_dps}\nelbow_dps{elbow_dps}\nroll_dps{roll_dps}\npitch_dps{pitch_dps}")
+
         self.send_speed_commands(rail_dps, shoulder_dps, elbow_dps, roll_dps, pitch_dps)
        
     
@@ -137,3 +156,8 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
+
+
+
+
