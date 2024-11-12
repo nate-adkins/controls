@@ -198,42 +198,12 @@ class Manipulator(Node):
         roll_dps = int(joy_msg.axes[WRIST_ROLL_AXES] * wrist_speed * MAX_DPS * 3)
         pitch_dps = floor(ww)
         rail_dps = floor((joy_msg.buttons[RAIL_LEFT_BTN] - joy_msg.buttons[RAIL_RIGHT_BTN]) * 1000)
+        
+        # if not any(max([we,ws,ww]) < MAX_DPS,ThetaS - ThetaE < SE_MIN,ThetaW < EW_MIN, ThetaW > 360 - EW_MIN ):
 
-        if DEBUGGING:
-            self.get_logger().info(f"rail_dps{rail_dps}\nshoulder_dps{shoulder_dps}\nelbow_dps{elbow_dps}\nroll_dps{roll_dps}\npitch_dps{pitch_dps}")
-
-        try:
-            if ws > MAX_DPS:
-                self.send_speed_commands(0,0,0,0,0)
-                raise ValueError(f'shoulder speed ({ws}) larger than max speed ({MAX_DPS})')
-
-            elif we > MAX_DPS:
-                self.send_speed_commands(0,0,0,0,0)
-                raise ValueError(f'elbow speed ({we}) larger than max speed ({MAX_DPS})')
-            
-            elif ww > MAX_DPS:
-                self.send_speed_commands(0,0,0,0,0)
-                raise ValueError(f'wrist speed ({ww}) larger than max speed ({MAX_DPS})')
-            
-            elif ThetaS - ThetaE < SE_MIN:
-                self.send_speed_commands(0,0,0,0,0)
-                raise ValueError(f'Shoulder and elbow difference ({ThetaS - ThetaE}) is below minimum angle ({SE_MIN})')
-
-            elif ThetaW < EW_MIN:
-                self.send_speed_commands(0,0,0,0,0)
-                raise ValueError(f'Theta W  ({ThetaW}) was less than minimum ({EW_MIN})')
-            
-            elif ThetaW > 360 - EW_MIN:
-                self.send_speed_commands(0,0,0,0,0)
-                raise ValueError(f'Theta W  ({ThetaW}) has wrap around error (360-EW_MIN) ({360 - EW_MIN})')
-
-            else:
-                self.send_speed_commands(rail_dps, shoulder_dps, elbow_dps, roll_dps, pitch_dps)
-
-        except ValueError as e:
-            pass
-            # self.get_logger().warning(f"{e.with_traceback()}")
-
+        self.send_speed_commands(rail_dps, shoulder_dps, elbow_dps, roll_dps, pitch_dps)
+       
+    
 def main(args=None):
     rclpy.init(args=args)
     manipulator = Manipulator()
