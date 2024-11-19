@@ -17,8 +17,3 @@ Robot control code for the manipulator and drivebase
 - [x] gui-independent voltage and current graphing
 - [ ] integrated switching between cam/uart
 - [ ] wanderer2 backwards compatability
-      
-## Starting
-```bash
-ros2 run pico_interface_pkg pico_host_node
-```
