@@ -15,5 +15,5 @@ Robot control code for the manipulator and drivebase
 ### Misc
 - [x] can start/stop bash script
 - [x] gui-independent voltage and current graphing
-- [ ] integrated switching between cam/uart
+- [ ] integrated switching between can/uart
 - [ ] wanderer2 backwards compatability
